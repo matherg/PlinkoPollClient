@@ -5,6 +5,7 @@ import { MainMenu } from './scenes/MainMenu';
 import { Preloader } from './scenes/Preloader';
 
 import { Game, Types } from "phaser";
+import CircleMaskImagePlugin from 'phaser3-rex-plugins/plugins/circlemaskimage-plugin.js';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -13,16 +14,24 @@ const config: Types.Core.GameConfig = {
     width: 1024,
     height: 768,
     parent: 'game-container',
-    pixelArt: true,
     backgroundColor: '#028af8',
+    pixelArt: true,
+    plugins: {
+        global: [{
+            key: 'rexCircleMaskImagePlugin',
+            plugin: CircleMaskImagePlugin,
+            start: true
+        },
+        ]
+    },
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: 3,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
     physics: {
         default : 'matter',
         matter: {
-            debug: true,
+            debug: false,
             gravity: {y: .5, x:0}
         }
     },

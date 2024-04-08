@@ -6,8 +6,11 @@ export class MainMenu extends Scene
     logo: GameObjects.Image;
     ballCount: number;
     startButton: Phaser.GameObjects.Text;
-    addButton: Phaser.GameObjects.Text;
     inputFields: HTMLInputElement[] = [];
+    pollInputField: HTMLInputElement;
+    getPollButton: HTMLButtonElement;
+    pollData: any;
+    pollDataFetched: boolean = false;
 
     constructor ()
     {
@@ -15,48 +18,115 @@ export class MainMenu extends Scene
         this.ballCount = 1;
 
     }
-    addBall() {
-        this.createInputField(this.ballCount++);
+    fetchPollData() {
+        const pollId = this.pollInputField.value;
+        fetch(`http://localhost:3000/getPoll/${pollId}`)
+            .then(response => response.json())
+            .then(data => {
+                this.pollData = data;
+                this.pollDataFetched = true; // Set the flag to true after fetching data
+                console.log('Poll data:', this.pollData);
+                this.startButton = this.add.text(346, 500, 'Start Game', {
+                    fontFamily: 'Arial Black', fontSize: 50, color: '#ffffff',
+                    stroke: '#000000', strokeThickness: 8,
+                    align: 'center'
+                })
+                    .setInteractive()
+                    .on('pointerdown', () => this.startGame());
+            })
+            .catch(error => {
+                console.error('Error fetching poll data:', error);
+            });
     }
+    createInputFieldForPollId() {
+        this.pollInputField = document.createElement('input');
+        this.pollInputField.type = 'text';
+        this.pollInputField.placeholder = 'Enter Poll ID';
+        // Styling
+        this.pollInputField.style.position = 'absolute';
+        this.pollInputField.style.top = '50%'; // Centers vertically
+        this.pollInputField.style.left = '50%'; // Centers horizontally
+        this.pollInputField.style.transform = 'translate(-50%, -50%)'; // Adjust the exact center
+        this.pollInputField.style.fontFamily = '"Press Start 2P", cursive'; // Example retro font
+        this.pollInputField.style.fontSize = '16px';
+        this.pollInputField.style.padding = '10px';
+        this.pollInputField.style.marginTop = '20px'; // To push it down from the title
+        this.pollInputField.style.border = '1px solid black';
+        this.pollInputField.style.borderRadius = '5px'; // Rounded corners
+        this.pollInputField.style.outline = 'none'; // Removes the default focus outline
+        this.pollInputField.style.boxShadow = '0 0 10px #000000'; // Soft shadow for depth
+        this.pollInputField.style.background = 'rgba(255, 255, 255, 0.8)'; // Slightly transparent white
+        this.pollInputField.style.color = '#000000'; // Text color
+
+        // Adding hover effect
+        this.pollInputField.addEventListener('mouseover', () => {
+            this.pollInputField.style.background = 'rgba(255, 255, 255, 1)'; // Solid white on hover
+        });
+        this.pollInputField.addEventListener('mouseout', () => {
+            this.pollInputField.style.background = 'rgba(255, 255, 255, 0.8)'; // Back to transparent white
+        });
+
+        // Add the input field to the document
+        document.body.appendChild(this.pollInputField);
+    }
+
     startGame() {
-        // Save the ball names into the game registry or pass them to the MainGame scene
-        const ballNames = this.inputFields.map(input => input.value || `Ball ${input.placeholder}`);
-        this.scene.start('Game', { ballNames });
+        // Transition to the Game scene, passing along the poll data
+        this.scene.start('Game', this.pollData);
 
-        // Remove the input elements from the DOM
-        this.inputFields.forEach(input => input.remove());
+        // Check if the poll data has been fetched
+        if (this.pollDataFetched) {
+            // Remove the poll input field from the DOM
+            if (this.pollInputField && this.pollInputField.parentElement) {
+                this.pollInputField.parentElement.removeChild(this.pollInputField);
+            }
+            if (this.getPollButton && this.getPollButton.parentElement) {
+                this.getPollButton.parentElement.removeChild(this.getPollButton);
+            }
+
+        } else {
+            // If the poll data hasn't been fetched yet, don't start the game.
+            console.error('Poll data has not been fetched. Game cannot start.');
+        }
     }
-    createInputField(index: number) {
-        const yOffset = 300 + (index * 30);
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.style.position = 'absolute';
-        input.style.top = `${yOffset}px`;
-        input.style.left = '1000px';
-        input.style.fontFamily = 'Arial Black';
-        input.style.border = '1px solid black';
-        document.body.appendChild(input);
-        this.inputFields.push(input);
+    createGetPollButton() {
+        const getPollButton = document.createElement('button');
+        getPollButton.innerText = 'Click To Get Poll!';
+        // Styling
+        getPollButton.style = this.pollInputField.style.cssText; // Copy styles from the input field
+        getPollButton.style.display = 'block';
+        getPollButton.style.width = 'auto';
+        getPollButton.style.height = 'auto';
+        getPollButton.style.lineHeight = '20px';
+        getPollButton.style.textAlign = 'center';
+        getPollButton.style.cursor = 'pointer';
+        getPollButton.style.marginTop = '90px'; // Adjust as needed
+
+        // Hover effect
+        getPollButton.addEventListener('mouseover', () => {
+            getPollButton.style.background = 'rgba(0, 0, 0, 1)'; // Solid black on hover
+            getPollButton.style.color = '#ffffff'; // White text on hover
+        });
+        getPollButton.addEventListener('mouseout', () => {
+            getPollButton.style.background = 'rgba(255, 255, 255, 0.8)'; // Back to transparent white
+            getPollButton.style.color = '#000000'; // Back to black text
+        });
+
+        // Click event
+        getPollButton.addEventListener('click', () => this.fetchPollData());
+
+        // Add the button to the document
+        this.getPollButton = getPollButton; // Add this line to save the button reference
+        document.body.appendChild(getPollButton);
     }
-    create ()
-    {
+
+    create () {
         this.background = this.add.image(512, 384, 'main');
-        this.add.text(800, 200, 'Add Options', { fontFamily: 'Arial Black', fontSize: 20, color: '#ffffff',
-            stroke: '#000000', strokeThickness: 8,
-            align: 'center' })
-        this.addButton = this.add.text(980, 255, '+', { fontFamily: 'Arial Black', fontSize: 30, color: '#ffffff',
-            stroke: '#000000', strokeThickness: 8,
-            align: 'center' })
-            .setInteractive()
-            .on('pointerdown', () => this.addBall());
-
-        this.startButton = this.add.text(346, 500, 'Start Game', { fontFamily: 'Arial Black', fontSize: 50, color: '#ffffff',
-                stroke: '#000000', strokeThickness: 8,
-                align: 'center' })
-            .setInteractive()
-            .on('pointerdown', () => this.startGame());
-
         // Add one input field by default
-        this.createInputField(0);
+
+        this.createInputFieldForPollId();
+        this.createGetPollButton();
+
     }
+
 }

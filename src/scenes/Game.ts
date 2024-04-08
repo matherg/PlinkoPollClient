@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import CircleMaskImage from "phaser3-rex-plugins/plugins/gameobjects/canvas/circlemaskimage/CircleMaskImage";
 
 export class Game extends Scene
 {
@@ -10,7 +11,8 @@ export class Game extends Scene
     platforms: Phaser.GameObjects.Group;
     leaderboardText: Phaser.GameObjects.Text;
     leaderboardScores: string[];
-    ballNames: string[];
+    winZone: MatterJS.BodyType;
+    raceOver: boolean;
 
 
 
@@ -20,50 +22,27 @@ export class Game extends Scene
     {
         super('Game');
     }
+    preload () {
+        this.load.plugin('rexcirclemaskimageplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcirclemaskimageplugin.min.js', true);
 
-    handleCollision (ball :  Phaser.GameObjects.GameObject, pole :  Phaser.GameObjects.GameObject) {
-        if (!(ball instanceof Phaser.Physics.Arcade.Sprite) || !(pole instanceof Phaser.Physics.Arcade.Sprite)) {
-            return;
-        }
-        if (!ball.body || !pole.body) return; // Guard clause to exit if body is null
-        const impactAngle = Math.atan2(ball.body.velocity.y, ball.body.velocity.x);
-
-
-        const rotationInfluence = ball.getData('rotationSpeed') * 5;
-
-        // Apply the influence of rotation to the ball's velocity
-        ball.body.velocity.x -= rotationInfluence * Math.sin(impactAngle);
-
-        let newRotationSpeed = Math.cos(impactAngle)  + ball.getData('rotationSpeed');
-        newRotationSpeed = Phaser.Math.Clamp(newRotationSpeed, -.5, .5);
-
-        ball.setData('rotationSpeed', newRotationSpeed);
-
-}
-
-
-    updateLeaderboard() {
-
-        const leaderboardString = 'Leaderboard\n' +this.leaderboardScores.join('\n');
-
-        this.leaderboardText.setText(leaderboardString);
     }
 
+
+
     createStandardArea(startingY: number) {
-        let ballNum = this.ballNames.length;
         const {width, height} = this.sys.game.canvas;
-        let center = width/2;
-        let tNum = ballNum + 3;
+        let tNum = 5
+       // let center = width/2;
         for (var y = tNum; y >= 0; y--) {
-            let startingPos = center - (tNum * 50)
+           // let startingPos = center - (tNum * 50)
             let offset = 0;
             let extra = 1;
             if (y % 2 == 0) {
                 offset = 50
                 extra = 0
             }
-            for (var x = 0; x < tNum + extra; x++) {
-                let pole = this.matter.add.sprite(startingPos + (x * 100) + offset, height /10 + ((tNum - y) * 100) + startingY, 'pole', undefined, {
+            for (var x = 0; x < tNum + 5 + extra; x++) {
+                let pole = this.matter.add.sprite(15 + (x * 100) + offset, height /10 + ((tNum - y) * 100) + startingY, 'pole', undefined, {
                     isStatic: true,
                     shape: {
                         type: 'circle',
@@ -77,70 +56,95 @@ export class Game extends Scene
     }
     createEnd(startingY: number) {
         const { width, height } = this.sys.game.canvas;
+        this.createWinZone();
 
         // Define the dimensions and positions for the left and right platforms
-        const platformLength = 400; // Length of each platform
+        const platformLength = 200 * 2.35; // Length of each platform
         const platformThickness = 40; // Thickness of the platforms
 
         // Calculate positions
         const leftPlatformX = width / 2 + platformLength /1.4 ;
         const rightPlatformX = width / 2 - platformLength / 1.4 ;
-        const platformY = startingY + height - 100; // Positioning it at the bottom
+        const platformY = startingY + height - 80; // Positioning it at the bottom
 
         // Left platform (\ part of the end)
           this.matter.add.rectangle(leftPlatformX, platformY, platformLength, platformThickness, {
             isStatic: true,
-            angle: -Math.PI / 6, // Tilting to the left, -45 degrees in radians
+            angle: -Math.PI / 12, // Tilting to the left, -45 degrees in radians
         });
 
         // Right platform (/ part of the end)
          this.matter.add.rectangle(rightPlatformX, platformY, platformLength, platformThickness, {
             isStatic: true,
-            angle: Math.PI / 6, // Tilting to the right, 45 degrees in radians
+            angle: Math.PI / 12, // Tilting to the right, 45 degrees in radians
         });
 
         // If you need to set textures for these platforms, you would typically add separate Phaser.GameObjects.Sprite for visual representation
         // and not rely on the Matter.js render options due to the limitations in syncing visual and physics representations in Phaser 3
-        this.add.image(leftPlatformX, platformY, 'end').setOrigin(0.5, 0.5).setAngle(-30).setScale(2, 4); // Assuming the texture 'end' fits a single platform and is 100x10 pixels
-        this.add.image(rightPlatformX, platformY, 'end').setOrigin(0.5, 0.5).setAngle(30).setScale(2,4 );
+        this.add.image(leftPlatformX, platformY, 'end').setOrigin(0.5, 0.5).setAngle(-15).setScale(1.35, 1); // Assuming the texture 'end' fits a single platform and is 100x10 pixels
+        this.add.image(rightPlatformX, platformY, 'endL').setOrigin(0.5, 0.5).setAngle(15).setScale(1.35,1);
     }
+    createWinZone() {
+        const { width, height } = this.sys.game.canvas;
+        const zoneHeight = 10; // Height for the win zone
 
-    createBalls(ballNames: string[], startX: number, startY: number) {
-        ballNames.forEach((name, index) => {
-            let positionX = startX + index * (Math.random() * 100 - 50); // Adjust spacing as needed
-            let positionY = startY;
+        // Create an invisible sensor at the bottom of the screen
+        this.winZone = this.matter.add.rectangle(width / 2, height - zoneHeight / 2, width, zoneHeight, {
+            isSensor: true,
+            isStatic: true
+        });
 
-            // Create a ball with Matter physics
-            let ball = this.matter.add.circle(positionX, positionY, 25, {
+        // Label the win zone for identification during collision events
+        this.winZone.label = 'winZone';
+    }
+    createBall(avatarURL: string, vote: string, x: number, y: number, userName: string) {
+        const textureKey = 'avatar_' + vote + '_' + Math.random().toString(16).slice(2);
+
+        this.load.image(textureKey, avatarURL);
+
+        this.load.once('complete', () => {
+            // Once the texture is loaded, create the circle-masked image using the plugin
+            let ballSprite = new CircleMaskImage(this, x, y, textureKey, undefined, {radius: 25}).setScale(.5)
+            this.add.existing(ballSprite)
+
+            // Set the physics body to a circle with a 25px radius
+            let circleBody = this.matter.bodies.circle(x, y, 25, {
                 restitution: 0.8,
                 friction: 0.005,
-                density: 0.01,
-
+                density: 0.01
             });
+            circleBody.label = 'ball';
+            // Add physics to the sprite
+           this.matter.add.gameObject(ballSprite, circleBody);
 
-            // To display the ball texture, consider creating a Phaser Sprite bound to the Matter body
-            let ballSprite = this.add.sprite(positionX, positionY, 'ball');
-            this.matter.add.gameObject(ballSprite, ball);
 
-            // Assign custom data to the sprite for later use
-            ballSprite.setData('name', name);
+            // Set the vote value as data on the sprite
+            ballSprite.setData('vote', vote);
+            ballSprite.setData('user',userName)
 
-            // Track the ball sprites in a group
+            // Add the ball to the balls group
             this.balls.add(ballSprite);
+
+            console.log('Ball created with texture key:', textureKey);
         });
+
+
+
+        this.load.start();
     }
+
 
     create (data: any)
     {
         this.matter.world.createDebugGraphic();
-
+        this.raceOver = false;
         this.camera = this.cameras.main;
         const worldHeight = 2000; // Example: making the world height much larger than the canvas height
 
         const {width, height} = this.sys.game.canvas;
         this.matter.world.setBounds(0,0,width, worldHeight, 25,true, true, false, true);
 
-        this.background = this.add.image(512, 384, 'background').setScale(1, 10);
+        this.background = this.add.image(512, 384, 'background');
 
         // Set world bounds to be larger than the canvas size
         this.camera.setBounds(0, 0, width, worldHeight);
@@ -150,15 +154,14 @@ export class Game extends Scene
 
         this.camera.setDeadzone(0, height - this.cameras.main.height)
         this.leaderboardScores = [];
-        this.leaderboardText =  this.add.text(50, 50, 'Leaderboard', {
-            fontFamily: 'Arial Black',
-            fontSize: '24px',
+        this.leaderboardText = this.add.text(50, 50, '', {
+            fontFamily: '"Press Start 2P", cursive',
+            fontSize: '20px',
             color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 8,
+            backgroundColor: '#000000', // You might want to adjust this
+            padding: { x: 10, y: 5 },
             align: 'left'
-        }).setScrollFactor(0);
-        this.ballNames = data.ballNames;
+        }).setScrollFactor(0).setVisible(false);
         this.camera.setBackgroundColor('#87CEFA');
 
 
@@ -183,18 +186,56 @@ export class Game extends Scene
 
 
         this.balls = this.add.group();
-        this.createBalls(this.ballNames, width / 2, 0);
+        console.log(data)
+        if (data.votes) {
+            Object.keys(data.votes).forEach((optionIndex) => {
+                const userIDs = data.votes[optionIndex];
+                userIDs.forEach((userID: string) => {
+                    const voter = data.voters.find((v: { userId: string; }) => v.userId === userID);
+                    if (voter) {
+                        let ballX = (width/2) + (Math.random() * 1000) - 500
+                        let pOpt = data.options[optionIndex];
+                        this.createBall(voter.avatarURL, pOpt, ballX, -10, voter.username);
+                    }
+                });
+            });
+        }
 
         //this.physics.world.createDebugGraphic();
 
 
         this.input.once('pointerdown', () => {
-
             this.scene.start('GameOver');
 
         });
     }
-    update() {
+    updateLeaderboard(ball) {
+        // Retrieve the ball's vote value
+        console.log('Update Leaderboard');
+        const vote = ball.getData('vote');
+        const user = ball.getData('user');
 
+
+        // Add the vote to the leaderboard scores array
+        this.leaderboardScores.push(user + ": " +vote);
+
+        // Sort or handle the leaderboard scores as you wish here
+        if (!this.leaderboardText.visible) {
+            this.leaderboardText.setVisible(true).setDepth(100);
+        }
+        // Update the leaderboard text
+        this.leaderboardText.setText('Winner\n' + this.leaderboardScores.join('\n'));
     }
+    update() {
+    // Check for collisions between the win zone and the balls
+    this.matter.world.on('collisionstart', (event, bodyA, bodyB) => {
+        if ((bodyA.label === 'ball' && bodyB.label === 'winZone') ||
+            (bodyB.label === 'ball' && bodyA.label === 'winZone') && !this.raceOver) {
+            let ball = bodyA.label === 'ball' ? bodyA.gameObject : bodyB.gameObject;
+            this.raceOver = true;
+            // Update the leaderboard with the ball's information
+            this.updateLeaderboard(ball);
+        }
+    });
+}
 }
