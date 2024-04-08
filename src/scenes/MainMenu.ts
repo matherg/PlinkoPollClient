@@ -122,8 +122,7 @@ export class MainMenu extends Scene
         const pollIdFromUrl  = pathArray[pathArray.length - 1]; // Assuming the poll ID is the last segment in the URL path
 
         // Check if the pollIdFromUrl is a number and populate the input field
-        console.log(pathArray)
-        console.log(pollIdFromUrl);
+
         this.createInputFieldForPollId();
         this.createGetPollButton();
 
