@@ -25,14 +25,9 @@ export class MainMenu extends Scene
             .then(data => {
                 this.pollData = data;
                 this.pollDataFetched = true; // Set the flag to true after fetching data
-                console.log('Poll data:', this.pollData);
-                this.startButton = this.add.text(346, 500, 'Start Game', {
-                    fontFamily: 'Arial Black', fontSize: 50, color: '#ffffff',
-                    stroke: '#000000', strokeThickness: 8,
-                    align: 'center'
-                })
-                    .setInteractive()
-                    .on('pointerdown', () => this.startGame());
+                this.getPollButton.innerText = 'Start Game';
+                this.getPollButton.removeEventListener('click', this.fetchPollData);
+                this.getPollButton.addEventListener('click', () => this.startGame());
             })
             .catch(error => {
                 console.error('Error fetching poll data:', error);
@@ -123,9 +118,19 @@ export class MainMenu extends Scene
     create () {
         this.background = this.add.image(512, 384, 'main');
         // Add one input field by default
+        const pathArray = window.location.pathname.split('/');
+        const pollIdFromUrl  = pathArray[pathArray.length - 1]; // Assuming the poll ID is the last segment in the URL path
 
+        // Check if the pollIdFromUrl is a number and populate the input field
+        console.log(pathArray)
+        console.log(pollIdFromUrl);
         this.createInputFieldForPollId();
         this.createGetPollButton();
+
+        if (pollIdFromUrl != undefined) {
+            this.pollInputField.value = pollIdFromUrl;
+            this.fetchPollData();
+        }
 
     }
 

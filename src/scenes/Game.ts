@@ -13,6 +13,7 @@ export class Game extends Scene
     leaderboardScores: string[];
     winZone: MatterJS.BodyType;
     raceOver: boolean;
+    pollId : number
 
 
 
@@ -104,7 +105,7 @@ export class Game extends Scene
 
         this.load.once('complete', () => {
             // Once the texture is loaded, create the circle-masked image using the plugin
-            let ballSprite = new CircleMaskImage(this, x, y, textureKey, undefined, {radius: 25}).setScale(.5)
+            let ballSprite = new CircleMaskImage(this, x, y, textureKey, undefined).setScale(.4)
             this.add.existing(ballSprite)
 
             // Set the physics body to a circle with a 25px radius
@@ -136,10 +137,11 @@ export class Game extends Scene
 
     create (data: any)
     {
+        this.pollId = data.pollId;
         this.matter.world.createDebugGraphic();
         this.raceOver = false;
         this.camera = this.cameras.main;
-        const worldHeight = 2000; // Example: making the world height much larger than the canvas height
+        const worldHeight = 2000;
 
         const {width, height} = this.sys.game.canvas;
         this.matter.world.setBounds(0,0,width, worldHeight, 25,true, true, false, true);
@@ -149,8 +151,7 @@ export class Game extends Scene
         // Set world bounds to be larger than the canvas size
         this.camera.setBounds(0, 0, width, worldHeight);
 
-        // You may also want to set the camera to not go below the bottom of the canvas
-        // This would be the game's canvas height minus the height of the camera's viewport
+
 
         this.camera.setDeadzone(0, height - this.cameras.main.height)
         this.leaderboardScores = [];
@@ -167,47 +168,46 @@ export class Game extends Scene
 
 
 
-       // let center = width/2;
 
 
-        // Create zones, poles, and platforms groups as regular Phaser Groups
+
+        // Create zones, poles, and platforms
         this.zones = this.add.group();
         this.poles = this.add.group();
         this.platforms = this.add.group();
 
-        // Now let's create the standard play area with poles as Matter bodies
         this.createStandardArea(0);
-
-        // Create the end zone, also as a Matter body
         this.createEnd(0);
-
-        //let zoneH = height-80
-        //let zoneX = (width/2) - 300
 
 
         this.balls = this.add.group();
         console.log(data)
         if (data.votes) {
-            Object.keys(data.votes).forEach((optionIndex) => {
-                const userIDs = data.votes[optionIndex];
-                userIDs.forEach((userID: string) => {
-                    const voter = data.voters.find((v: { userId: string; }) => v.userId === userID);
-                    if (voter) {
-                        let ballX = (width/2) + (Math.random() * 1000) - 500
-                        let pOpt = data.options[optionIndex];
-                        this.createBall(voter.avatarURL, pOpt, ballX, -10, voter.username);
-                    }
-                });
+            Object.keys(data.votes).forEach((userID) => {
+                const opt = data.votes[userID];
+                const voter = data.voters.find((v: { userId: string; }) => v.userId === userID);
+                if (voter) {
+                    let ballX = (width/2) + (Math.random() * 1000) - 500
+                    let pOpt = data.options[opt];
+                    this.createBall(voter.avatarURL, pOpt, ballX, -10, voter.username);
+                }
             });
         }
-
-        //this.physics.world.createDebugGraphic();
-
 
         this.input.once('pointerdown', () => {
             this.scene.start('GameOver');
 
         });
+    }
+    endPollRequest(pollId: number, username: string, option: string,) {
+        console.log(username, option)
+        fetch(`http://localhost:3000/endpoll/${pollId}/${username}/${option}`, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json'
+            }}
+           )
     }
     updateLeaderboard(ball) {
         // Retrieve the ball's vote value
@@ -219,7 +219,7 @@ export class Game extends Scene
         // Add the vote to the leaderboard scores array
         this.leaderboardScores.push(user + ": " +vote);
 
-        // Sort or handle the leaderboard scores as you wish here
+        // Sort or handle the leaderboard scores
         if (!this.leaderboardText.visible) {
             this.leaderboardText.setVisible(true).setDepth(100);
         }
@@ -235,6 +235,10 @@ export class Game extends Scene
             this.raceOver = true;
             // Update the leaderboard with the ball's information
             this.updateLeaderboard(ball);
+            const vote = ball.getData('vote');
+            const user = ball.getData('user');
+            this.endPollRequest(this.pollId, user, vote);
+
         }
     });
 }
