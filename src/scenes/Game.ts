@@ -129,7 +129,7 @@ export class Game extends Scene
 
         this.winZone.label = 'winZone';
     }
-    createBall(avatarURL: string, vote: string, x: number, y: number, userName: string) {
+    createBall(avatarURL: string, vote: string, x: number, y: number, userName: string, userID : string) {
         const textureKey = 'avatar_' + vote + '_' + Math.random().toString(16).slice(2);
 
         this.load.image(textureKey, avatarURL);
@@ -152,6 +152,7 @@ export class Game extends Scene
             // Set the vote value as data on the sprite
             ballSprite.setData('vote', vote);
             ballSprite.setData('user',userName)
+            ballSprite.setData('userId',userID);
 
             // Add the ball to the balls group
             this.balls.add(ballSprite);
@@ -224,16 +225,15 @@ export class Game extends Scene
                 if (voter) {
                     let ballX = (width/2) + (Math.random() * 800) - 400
                     let pOpt = data.options[opt];
-                    this.createBall(voter.avatarURL, pOpt, ballX, -10, voter.username);
+                    this.createBall(voter.avatarURL, pOpt, ballX, -10, voter.username, userID);
                 }
             });
         }
 
 
     }
-    endPollRequest(pollId: number, username: string, option: string) {
-        console.log(username, option)
-        fetch(`http://localhost:3000/endpoll/${pollId}/${username}/${option}`, {
+    endPollRequest(pollId: number, userId: string, option: string, optionNum: number) {
+        fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/endpoll/${pollId}/${userId}/${option}/${optionNum}`, {
             method: 'POST',
             mode: 'no-cors',
             headers: {
@@ -270,9 +270,9 @@ export class Game extends Scene
             this.raceOver = true;
             this.updateLeaderboard(ball);
             const vote = ball.getData('vote');
-            const user = ball.getData('user');
+            const userId = ball.getData('userId');
             if (!this.endPollSent) {
-                this.endPollRequest(this.pollId, user, vote);
+                this.endPollRequest(this.pollId, userId, vote, this.balls.getLength());
                 this.endPollSent = true;
             }
             this.restartButton.setVisible(true);

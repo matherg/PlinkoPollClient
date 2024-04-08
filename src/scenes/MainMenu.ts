@@ -20,7 +20,7 @@ export class MainMenu extends Scene
     }
     fetchPollData() {
         const pollId = this.pollInputField.value;
-        fetch(`http://localhost:3000/getPoll/${pollId}`)
+        fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/getPoll/${pollId}`)
             .then(response => response.json())
             .then(data => {
                 this.pollData = data;
