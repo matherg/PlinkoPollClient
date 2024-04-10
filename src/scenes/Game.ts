@@ -229,8 +229,8 @@ export class Game extends Scene {
         this.startRecording()
     }
 
-    endPollRequest(pollId: number, userId: string, option: string, optionNum: number) {
-        fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/endpoll/${pollId}/${userId}/${option}/${optionNum}`, {
+    endPollRequest(pollId: number, userId: string, option: string, optionNum: number, videoURL: string) {
+        fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/endpoll/${pollId}/${userId}/${option}/${optionNum}/${videoURL}`, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: {
@@ -297,7 +297,7 @@ export class Game extends Scene {
             const vote = ball.getData('vote');
             const userId = ball.getData('userId');
             if (!this.endPollSent) {
-                this.endPollRequest(this.pollId, userId, vote, this.balls.getLength());
+                this.endPollRequest(this.pollId, userId, vote, this.balls.getLength(), this.videoURL);
                 this.endPollSent = true;
             }
             this.restartButton.setVisible(true);
