@@ -229,14 +229,19 @@ export class Game extends Scene {
     }
 
     endPollRequest(pollId: number, userId: string, option: string, optionNum: number, videoURL: string) {
-        fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/endpoll/${pollId}/${userId}/${option}/${optionNum}/${videoURL}`, {
+            fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/endpoll`, {
                 method: 'POST',
-                mode: 'no-cors',
                 headers: {
                     'Content-Type': 'application/json'
-                }
-            }
-        )
+                },
+                body: JSON.stringify({
+                    pollId: pollId,
+                    userId: userId,
+                    option: option,
+                    numOptions: optionNum,
+                    videoUrl: videoURL
+                })
+            })
         URL.revokeObjectURL(videoURL);
     }
 
@@ -269,7 +274,6 @@ export class Game extends Scene {
 
     updateLeaderboard(ball) {
         // Retrieve the ball's vote value
-        console.log('Update Leaderboard');
         const vote = ball.getData('vote');
         const user = ball.getData('user');
 
