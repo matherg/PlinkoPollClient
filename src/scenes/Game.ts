@@ -238,7 +238,7 @@ export class Game extends Scene {
             fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/endpoll`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'multipart/form-data'
                 },
                 mode: 'cors',
                 body: formData
