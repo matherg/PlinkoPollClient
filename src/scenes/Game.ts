@@ -234,6 +234,7 @@ export class Game extends Scene {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                mode: 'cors',
                 body: JSON.stringify({
                     pollId: pollId,
                     userId: userId,
@@ -242,6 +243,9 @@ export class Game extends Scene {
                     videoUrl: videoURL
                 })
             })
+                .then(response => response.json())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error:', error));
         URL.revokeObjectURL(videoURL);
     }
 
