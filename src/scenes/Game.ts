@@ -228,25 +228,24 @@ export class Game extends Scene {
         this.startRecording()
     }
 
-    endPollRequest(pollId: number, userId: string, option: string, optionNum: number, videoURL: string) {
+    endPollRequest(pollId: number, userId: string, option: string, optionNum: number, blob: Blob) {
+        const formData = new FormData();
+        formData.append('pollId', pollId.toString());
+        formData.append('userId', userId);
+        formData.append('option', option);
+        formData.append('optionNum', optionNum.toString())
+        formData.append('replay', blob, 'replay.webm');
             fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/endpoll`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 mode: 'cors',
-                body: JSON.stringify({
-                    pollId: pollId,
-                    userId: userId,
-                    option: option,
-                    numOptions: optionNum,
-                    videoUrl: videoURL
-                })
+                body: formData
             })
                 .then(response => response.json())
                 .then(data => console.log(data))
                 .catch(error => console.error('Error:', error));
-        URL.revokeObjectURL(videoURL);
     }
 
     startRecording() {
@@ -267,8 +266,7 @@ export class Game extends Scene {
         return new Promise(resolve => {
             this.recorder.onstop = async () => {
                 const blob = new Blob(this.recordedChunks, {type: 'video/webm'});
-                const videoURL = URL.createObjectURL(blob);
-                resolve(videoURL);
+                resolve(blob);
             };
 
             this.recorder.stop();
@@ -305,9 +303,9 @@ export class Game extends Scene {
             this.updateLeaderboard(ball);
             const vote = ball.getData('vote');
             const userId = ball.getData('userId');
-            this.stopRecording().then(videoURL => {
+            this.stopRecording().then(blob => {
             if (!this.endPollSent) {
-                this.endPollRequest(this.pollId, userId, vote, this.balls.getLength(), videoURL);
+                this.endPollRequest(this.pollId, userId, vote, this.balls.getLength(), blob);
                 this.endPollSent = true;
             }});
             this.restartButton.setVisible(true);
