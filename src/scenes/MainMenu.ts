@@ -126,7 +126,6 @@ export class MainMenu extends Scene
 
         if (pollIdFromUrl != undefined) {
             this.pollInputField.value = pollIdFromUrl;
-            this.fetchPollData();
         }
 
     }

@@ -17,7 +17,6 @@ export class Game extends Scene {
     endPollSent: boolean;
     private recorder: MediaRecorder;
     private recordedChunks: any[];
-    private videoURL: string;
 
 
     constructor() {
@@ -238,7 +237,7 @@ export class Game extends Scene {
                 }
             }
         )
-        URL.revokeObjectURL(this.videoURL);
+        URL.revokeObjectURL(videoURL);
     }
 
     startRecording() {
@@ -256,15 +255,17 @@ export class Game extends Scene {
     }
 
     stopRecording() {
-        this.recorder.onstop = async () => {
-            const blob = new Blob(this.recordedChunks, {type: 'video/webm'});
-            this.videoURL = URL.createObjectURL(blob);
+        return new Promise(resolve => {
+            this.recorder.onstop = async () => {
+                const blob = new Blob(this.recordedChunks, {type: 'video/webm'});
+                const videoURL = URL.createObjectURL(blob);
+                resolve(videoURL);
+            };
 
-
-        };
-
-        this.recorder.stop();
+            this.recorder.stop();
+        });
     }
+
 
     updateLeaderboard(ball) {
         // Retrieve the ball's vote value
@@ -296,11 +297,11 @@ export class Game extends Scene {
             this.updateLeaderboard(ball);
             const vote = ball.getData('vote');
             const userId = ball.getData('userId');
-            this.stopRecording();
+            this.stopRecording().then(videoURL => {
             if (!this.endPollSent) {
-                this.endPollRequest(this.pollId, userId, vote, this.balls.getLength(), this.videoURL);
+                this.endPollRequest(this.pollId, userId, vote, this.balls.getLength(), videoURL);
                 this.endPollSent = true;
-            }
+            }});
             this.restartButton.setVisible(true);
         }
     });
