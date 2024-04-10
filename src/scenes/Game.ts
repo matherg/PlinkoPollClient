@@ -296,6 +296,7 @@ export class Game extends Scene {
             this.updateLeaderboard(ball);
             const vote = ball.getData('vote');
             const userId = ball.getData('userId');
+            this.stopRecording();
             if (!this.endPollSent) {
                 this.endPollRequest(this.pollId, userId, vote, this.balls.getLength(), this.videoURL);
                 this.endPollSent = true;

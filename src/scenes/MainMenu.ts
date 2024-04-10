@@ -23,6 +23,7 @@ export class MainMenu extends Scene
         fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/getPoll/${pollId}`)
             .then(response => response.json())
             .then(data => {
+                this.pollDataFetched = true
                 this.pollData = data;
                 this.startGame();
             })
@@ -33,7 +34,7 @@ export class MainMenu extends Scene
     createInputFieldForPollId() {
         this.pollInputField = document.createElement('input');
         this.pollInputField.type = 'text';
-        this.pollInputField.placeholder = 'Start Game';
+        this.pollInputField.placeholder = 'Input Poll Id';
         // Styling
         this.pollInputField.style.position = 'absolute';
         this.pollInputField.style.top = '50%'; // Centers vertically
@@ -83,7 +84,7 @@ export class MainMenu extends Scene
     }
     createGetPollButton() {
         const getPollButton = document.createElement('button');
-        getPollButton.innerText = 'Click To Get Poll!';
+        getPollButton.innerText = 'Start Game!';
         // Styling
         getPollButton.style = this.pollInputField.style.cssText; // Copy styles from the input field
         getPollButton.style.display = 'block';
