@@ -237,7 +237,7 @@ export class Game extends Scene {
         formData.append('replay', blob, 'replay.webm');
             fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/endpoll`, {
                 method: 'POST',
-                mode: 'cors',
+                mode: 'no-cors',
                 body: formData
             })
                 .then(response => response.json())
