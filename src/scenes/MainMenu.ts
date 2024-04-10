@@ -24,10 +24,7 @@ export class MainMenu extends Scene
             .then(response => response.json())
             .then(data => {
                 this.pollData = data;
-                this.pollDataFetched = true; // Set the flag to true after fetching data
-                this.getPollButton.innerText = 'Start Game';
-                this.getPollButton.removeEventListener('click', this.fetchPollData);
-                this.getPollButton.addEventListener('click', () => this.startGame());
+                this.startGame();
             })
             .catch(error => {
                 console.error('Error fetching poll data:', error);
@@ -36,7 +33,7 @@ export class MainMenu extends Scene
     createInputFieldForPollId() {
         this.pollInputField = document.createElement('input');
         this.pollInputField.type = 'text';
-        this.pollInputField.placeholder = 'Enter Poll ID';
+        this.pollInputField.placeholder = 'Start Game';
         // Styling
         this.pollInputField.style.position = 'absolute';
         this.pollInputField.style.top = '50%'; // Centers vertically

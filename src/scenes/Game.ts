@@ -1,8 +1,7 @@
 import { Scene } from 'phaser';
 import CircleMaskImage from "phaser3-rex-plugins/plugins/gameobjects/canvas/circlemaskimage/CircleMaskImage";
 
-export class Game extends Scene
-{
+export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     background: Phaser.GameObjects.Image;
     balls: Phaser.GameObjects.Group;
@@ -13,27 +12,26 @@ export class Game extends Scene
     leaderboardScores: string[];
     winZone: MatterJS.BodyType;
     raceOver: boolean;
-    pollId : number
+    pollId: number
     restartButton: Phaser.GameObjects.Text;
     endPollSent: boolean;
+    private recorder: MediaRecorder;
+    private recordedChunks: any[];
+    private videoURL: string;
 
 
-
-
-
-    constructor ()
-    {
+    constructor() {
         super('Game');
     }
-    preload () {
+
+    preload() {
         this.load.plugin('rexcirclemaskimageplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcirclemaskimageplugin.min.js', true);
 
     }
 
 
-
     positionPoles() {
-        const { width, height } = this.sys.game.canvas;
+        const {width, height} = this.sys.game.canvas;
         const poleRadius = 15;
         const ballDiameter = 50;
 
@@ -55,9 +53,9 @@ export class Game extends Scene
         });
     }
 
-    positionPolesVertically(screenWidth: number, screenHeight: number, poleRadius: number, ballDiameter : number) {
+    positionPolesVertically(screenWidth: number, screenHeight: number, poleRadius: number, ballDiameter: number) {
         const verticalSpacing = ballDiameter * 2;
-        const numberOfRows = Math.floor((screenHeight-100) / verticalSpacing);
+        const numberOfRows = Math.floor((screenHeight - 100) / verticalSpacing);
         const rowsOfPoles = [];
 
         for (let row = 0; row < numberOfRows; row++) {
@@ -92,34 +90,35 @@ export class Game extends Scene
     }
 
     createEnd(startingY: number) {
-        const { width, height } = this.sys.game.canvas;
+        const {width, height} = this.sys.game.canvas;
         this.createWinZone();
 
         const platformLength = 200 * 2.35;
         const platformThickness = 40;
 
         // Calculate positions
-        const leftPlatformX = width / 2 + platformLength /1.4 ;
-        const rightPlatformX = width / 2 - platformLength / 1.4 ;
+        const leftPlatformX = width / 2 + platformLength / 1.4;
+        const rightPlatformX = width / 2 - platformLength / 1.4;
         const platformY = startingY + height - 80;
 
         // Left platform
-          this.matter.add.rectangle(leftPlatformX, platformY, platformLength, platformThickness, {
+        this.matter.add.rectangle(leftPlatformX, platformY, platformLength, platformThickness, {
             isStatic: true,
             angle: -Math.PI / 12,
         });
 
         // Right platform
-         this.matter.add.rectangle(rightPlatformX, platformY, platformLength, platformThickness, {
+        this.matter.add.rectangle(rightPlatformX, platformY, platformLength, platformThickness, {
             isStatic: true,
             angle: Math.PI / 12,
         });
 
         this.add.image(leftPlatformX, platformY, 'end').setOrigin(0.5, 0.5).setAngle(-15).setScale(1.35, 1); // Assuming the texture 'end' fits a single platform and is 100x10 pixels
-        this.add.image(rightPlatformX, platformY, 'endL').setOrigin(0.5, 0.5).setAngle(15).setScale(1.35,1);
+        this.add.image(rightPlatformX, platformY, 'endL').setOrigin(0.5, 0.5).setAngle(15).setScale(1.35, 1);
     }
+
     createWinZone() {
-        const { width, height } = this.sys.game.canvas;
+        const {width, height} = this.sys.game.canvas;
         const zoneHeight = 10; // Height for the win zone
 
         this.winZone = this.matter.add.rectangle(width / 2, height - zoneHeight / 2, width, zoneHeight, {
@@ -129,7 +128,8 @@ export class Game extends Scene
 
         this.winZone.label = 'winZone';
     }
-    createBall(avatarURL: string, vote: string, x: number, y: number, userName: string, userID : string) {
+
+    createBall(avatarURL: string, vote: string, x: number, y: number, userName: string, userID: string) {
         const textureKey = 'avatar_' + vote + '_' + Math.random().toString(16).slice(2);
 
         this.load.image(textureKey, avatarURL);
@@ -145,14 +145,13 @@ export class Game extends Scene
             });
             circleBody.label = 'ball';
             // Add physics to the sprite
-           this.matter.add.gameObject(ballSprite, circleBody);
-
+            this.matter.add.gameObject(ballSprite, circleBody);
 
 
             // Set the vote value as data on the sprite
             ballSprite.setData('vote', vote);
-            ballSprite.setData('user',userName)
-            ballSprite.setData('userId',userID);
+            ballSprite.setData('user', userName)
+            ballSprite.setData('userId', userID);
 
             // Add the ball to the balls group
             this.balls.add(ballSprite);
@@ -161,37 +160,35 @@ export class Game extends Scene
         });
 
 
-
         this.load.start();
     }
 
 
-    create (data: any)
-    {
+    create(data: any) {
 
         this.restartButton = this.add.text(50, 150, 'Restart', {
             fontFamily: '"Press Start 2P", cursive',
             fontSize: '20px',
             color: '#ffffff',
             backgroundColor: '#000000',
-            padding: { x: 10, y: 10 },
-            align: 'left'})
-        .setInteractive().setDepth(100)
-        .setVisible(false)
-        .on('pointerdown', () => this.restartGame());
+            padding: {x: 10, y: 10},
+            align: 'left'
+        })
+            .setInteractive().setDepth(100)
+            .setVisible(false)
+            .on('pointerdown', () => this.restartGame());
         this.pollId = data.pollId;
         this.raceOver = false;
         this.camera = this.cameras.main;
         const worldHeight = 2000;
 
         const {width, height} = this.sys.game.canvas;
-        this.matter.world.setBounds(0,0,width, worldHeight, 25,true, true, false, true);
+        this.matter.world.setBounds(0, 0, width, worldHeight, 25, true, true, false, true);
 
         this.background = this.add.image(512, 384, 'background');
 
         // Set world bounds to be larger than the canvas size
         this.camera.setBounds(0, 0, width, worldHeight);
-
 
 
         this.camera.setDeadzone(0, height - this.cameras.main.height)
@@ -202,7 +199,7 @@ export class Game extends Scene
             color: '#ffffff',
             lineSpacing: 10,
             backgroundColor: '#000000', // You might want to adjust this
-            padding: { x: 10, y: 10 },
+            padding: {x: 10, y: 10},
             align: 'left'
         }).setScrollFactor(0).setVisible(false);
         this.camera.setBackgroundColor('#87CEFA');
@@ -217,30 +214,58 @@ export class Game extends Scene
 
 
         this.balls = this.add.group();
-        console.log(data)
         if (data.votes) {
             Object.keys(data.votes).forEach((userID) => {
                 const opt = data.votes[userID];
                 const voter = data.voters.find((v: { userId: string; }) => v.userId === userID);
                 if (voter) {
-                    let ballX = (width/2) + (Math.random() * 800) - 400
+                    let ballX = (width / 2) + (Math.random() * 800) - 400
                     let pOpt = data.options[opt];
                     this.createBall(voter.avatarURL, pOpt, ballX, -10, voter.username, userID);
                 }
             });
         }
 
-
+        this.startRecording()
     }
+
     endPollRequest(pollId: number, userId: string, option: string, optionNum: number) {
         fetch(`https://plinko-bot-08e1622e0b2f.herokuapp.com/endpoll/${pollId}/${userId}/${option}/${optionNum}`, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/json'
-            }}
-           )
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        )
+        URL.revokeObjectURL(this.videoURL);
     }
+
+    startRecording() {
+        const canvasStream = this.game.canvas.captureStream(30); // 30 FPS
+        this.recorder = new MediaRecorder(canvasStream, {mimeType: 'video/webm'});
+
+        this.recordedChunks = [];
+        this.recorder.ondataavailable = event => {
+            if (event.data.size > 0) {
+                this.recordedChunks.push(event.data);
+            }
+        };
+        this.recorder.start();
+
+    }
+
+    stopRecording() {
+        this.recorder.onstop = async () => {
+            const blob = new Blob(this.recordedChunks, {type: 'video/webm'});
+            this.videoURL = URL.createObjectURL(blob);
+
+
+        };
+
+        this.recorder.stop();
+    }
+
     updateLeaderboard(ball) {
         // Retrieve the ball's vote value
         console.log('Update Leaderboard');
