@@ -234,7 +234,7 @@ export class Game extends Scene {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                mode: 'no-cors',
+                mode: 'cors',
                 body: JSON.stringify({
                     pollId: pollId,
                     userId: userId,
