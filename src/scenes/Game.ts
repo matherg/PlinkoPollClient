@@ -81,7 +81,7 @@ export class Game extends Scene {
         let edgeSpace = remainingSpace / 2 ;
         const polePositions = [];
 
-        let currentPosition = edgeSpace + ballDiameter / 2 + poleRadius;
+        let currentPosition = edgeSpace + ballDiameter  + poleRadius;
         if (staggerOffset ) {
             polePositions.push(-1);
             //currentPosition += unitSpace/2;
