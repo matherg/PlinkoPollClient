@@ -162,7 +162,8 @@ export class Game extends Scene {
 
             // Add the ball to the balls group
             this.balls.add(ballSprite);
-
+            const randomXVelocity = Phaser.Math.Between(-10, 10);
+            this.matter.body.setVelocity(<MatterJS.BodyType>ballSprite.body, { x: randomXVelocity, y: 0 });
             console.log('Ball created with texture key:', textureKey);
         });
 
