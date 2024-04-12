@@ -162,7 +162,7 @@ export class Game extends Scene {
 
             // Add the ball to the balls group
             this.balls.add(ballSprite);
-            const randomXVelocity = Phaser.Math.Between(-10, 10);
+            const randomXVelocity = Phaser.Math.Between(-5, 5);
             this.matter.body.setVelocity(<MatterJS.BodyType>ballSprite.body, { x: randomXVelocity, y: 0 });
             console.log('Ball created with texture key:', textureKey);
         });
@@ -228,7 +228,7 @@ export class Game extends Scene {
                 if (voter) {
                     let ballX = (width / 2) + (Math.random() * 800) - 400
                     let pOpt = data.options[opt];
-                    this.createBall(voter.avatarURL, pOpt, ballX, -20, voter.username, userID);
+                    this.createBall(voter.avatarURL, pOpt, ballX, -30, voter.username, userID);
                 }
             });
         }
