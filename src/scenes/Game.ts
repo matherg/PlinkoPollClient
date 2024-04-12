@@ -268,12 +268,13 @@ export class Game extends Scene {
 
     stopRecording() {
         return new Promise(resolve => {
-            this.recorder.onstop = async () => {
-                const blob = new Blob(this.recordedChunks, {type: 'video/webm'});
-                resolve(blob);
-            };
-
-            this.recorder.stop();
+            setTimeout(() => {
+                this.recorder.onstop = () => {
+                    const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+                    resolve(blob);
+                };
+                this.recorder.stop();
+            }, 1000);
         });
     }
 
