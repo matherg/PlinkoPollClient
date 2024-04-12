@@ -72,7 +72,7 @@ export class Game extends Scene {
     }
 
     positionPolesHorizontally(screenWidth: number, poleRadius: number, ballDiameter: number, staggerOffset: boolean) {
-        const unitSpace = 2 * poleRadius + ballDiameter + 10; // Space taken by one pole and one ball diameter
+        const unitSpace = 2 * poleRadius + ballDiameter + 15; // Space taken by one pole and one ball diameter
         let numberOfPoles = Math.floor(screenWidth   / unitSpace);
         if (staggerOffset ) {
             numberOfPoles -= 1;
@@ -81,10 +81,10 @@ export class Game extends Scene {
         let edgeSpace = remainingSpace / 2 ;
         const polePositions = [];
 
-        let currentPosition = edgeSpace + unitSpace/2;
+        let currentPosition = edgeSpace + (staggerOffset ? unitSpace / 2 : poleRadius);
         if (staggerOffset ) {
             polePositions.push(-1);
-            //currentPosition += unitSpace/2;
+
         }
         for (let i = 0; i < numberOfPoles; i++) {
             polePositions.push(currentPosition);
