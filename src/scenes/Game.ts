@@ -142,7 +142,7 @@ export class Game extends Scene {
             this.add.existing(ballSprite)
 
             let circleBody = this.matter.bodies.circle(x, y, 25, {
-                restitution: 1,
+                restitution: .8,
                 friction: 0.005,
                 density: 0.01
             });
