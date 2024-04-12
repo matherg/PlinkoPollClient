@@ -147,7 +147,7 @@ export class Game extends Scene {
 
             let circleBody = this.matter.bodies.circle(x, y, 25, {
                 restitution: .66,
-                friction: 0,
+                friction: .1,
                 density: 0.01
             });
             circleBody.label = 'ball';
