@@ -32,7 +32,7 @@ const config: Types.Core.GameConfig = {
         default : 'matter',
         matter: {
             debug: false,
-            gravity: {y: .5, x:0}
+            gravity: {y: .7, x:0}
         }
     },
     scene: [

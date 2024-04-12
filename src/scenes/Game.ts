@@ -58,7 +58,7 @@ export class Game extends Scene {
         const rowsOfPoles = [];
 
         for (let row = 0; row < numberOfRows; row++) {
-            let staggerOffset = row % 2 === 0 ? 0 : ballDiameter / 2;
+            let staggerOffset = row % 2 === 0 ? 0 :  ballDiameter/2 + poleRadius;
             let horizontalPositions = this.positionPolesHorizontally(screenWidth, poleRadius, ballDiameter, staggerOffset);
             let verticalPosition = row * verticalSpacing + verticalSpacing / 2;
 
@@ -73,18 +73,22 @@ export class Game extends Scene {
 
     positionPolesHorizontally(screenWidth: number, poleRadius: number, ballDiameter: number, staggerOffset: number) {
         const unitSpace = 2 * poleRadius + ballDiameter; // Space taken by one pole and one ball diameter
-        let numberOfPoles = Math.floor((screenWidth - ballDiameter - staggerOffset) / unitSpace);
-        let remainingSpace = screenWidth - (numberOfPoles * unitSpace) - staggerOffset;
-        let edgeSpace = remainingSpace / 2 + staggerOffset;
+        let numberOfPoles = Math.floor((screenWidth - ballDiameter - staggerOffset ) / unitSpace);
+        let remainingSpace = screenWidth - (numberOfPoles * unitSpace) ;
+        let edgeSpace = remainingSpace / 2 ;
         const polePositions = [];
 
         let currentPosition = edgeSpace + ballDiameter / 2 + poleRadius;
-
+        if (staggerOffset != 0) {
+            polePositions.push(-1)
+        }
         for (let i = 0; i < numberOfPoles; i++) {
             polePositions.push(currentPosition);
             currentPosition += unitSpace;
         }
-
+        if (staggerOffset != 0) {
+            polePositions.push(screenWidth +1)
+        }
         return polePositions;
     }
 
@@ -164,7 +168,6 @@ export class Game extends Scene {
 
 
     create(data: any) {
-
         this.restartButton = this.add.text(50, 150, 'Restart', {
             fontFamily: '"Press Start 2P", cursive',
             fontSize: '20px',
@@ -220,11 +223,10 @@ export class Game extends Scene {
                 if (voter) {
                     let ballX = (width / 2) + (Math.random() * 800) - 400
                     let pOpt = data.options[opt];
-                    this.createBall(voter.avatarURL, pOpt, ballX, -10, voter.username, userID);
+                    this.createBall(voter.avatarURL, pOpt, ballX, -20, voter.username, userID);
                 }
             });
         }
-
         this.startRecording()
     }
 
